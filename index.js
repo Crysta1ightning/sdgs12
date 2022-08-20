@@ -9,25 +9,117 @@ const SpotToPath = require('./models/spot_to_path');
 const UserToSpot = require('./models/user_to_spot');
 const bcrypt = require('bcryptjs');
 const { Op } = require("sequelize");
+const nodemailer = require('nodemailer')
+const { google } = require('googleapis');
 
 app.use(cors())
 app.use(express.json())
 
 // AUTH
-app.post('/api/register', async (req, res) => {
-    const studentID = req.body.studentID === '' ? null : req.body.studentID;
+const CLIENT_ID = '673142117765-s8rpp52r7etabta82nt4bvl3gi5g4r32.apps.googleusercontent.com'
+const CLIENT_SECRET = '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'
+const REDIRECT_URI = 'https://developers.google.com/oauthplayground'
+const REFRESH_TOKEN = '1//04FnEyvfkNup_CgYIARAAGAQSNwF-L9IrjBrVbxinsMqlwiSV4F0SzubCg8YrykzoMfJHuOqY1Q2rbQMfrADFmYVZgArGCAprHKI'
+
+const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
+oAuth2Client.setCredentials({refresh_token: REFRESH_TOKEN})
+
+async function sendVerificationMail(email, uniqueString) {
     try {
+        const accessToken = await oAuth2Client.getAccessToken()
+        const transport = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                type: 'OAUTH2',
+                user: 'nthutestsdgs@gmail.com',
+                clientId: CLIENT_ID,
+                clientSecret: CLIENT_SECRET,
+                refreshToken: REFRESH_TOKEN,
+                accessToken: accessToken
+            }
+        })
+        const token = jwt.sign(
+            {
+                email: email, 
+                uniqueString: uniqueString,
+                type: 0,
+            },
+            'secret123', 
+            {
+                expiresIn: '5m',
+            }
+        )
+        const mailOptions = {
+            from: 'NTHUSDGS <nthusdgs@gmail.com',
+            to: email,
+            subject: '[NTHU SDGS] Verify Your Email',
+            text: 'Go to this link: https://sdgs12.herokuapp.com/api/verify/' + token + ' to verify your email. Thanks',
+            html: '<p>Press <a href=https://sdgs12.herokuapp.com/api/verify/' + token + '>here</a> to verify your email. Thanks</p>\
+            <br>Link will expire in 5 minutes'
+        }
+        const result = await transport.sendMail(mailOptions);
+        return result
+    } catch (err) {
+        return err
+    }
+}
+
+app.post('/api/register', async (req, res) => {
+    try {
+        const studentID = req.body.studentID === '' ? null : req.body.studentID;
+        var randString = "";
+        const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (var i = 0; i < 20; i++)
+            randString += possible.charAt(Math.floor(Math.random() * possible.length));
+        const hashString = await bcrypt.hash(randString, 10);
         const hashPassword = await bcrypt.hash(req.body.newPassword, 10);
         await User.create({
             email: req.body.newEmail,
             password: hashPassword,
-            studentID: studentID
+            studentID: studentID,
+            verified: false,
+            uniqueString: hashString
         })
-        if(req.body.studentID === '') return res.json({status: 'ok2'});
-        return res.json({status: "ok1"});
+        if(req.body.studentID === '') res.json({status: 'ok2'});
+        else res.json({status: "ok1"});
+        await sendVerificationMail(req.body.newEmail, randString);
+        
     } catch (err) {
         console.log(err);
         return res.json({status: 'fail', error: 'Email Registered'});
+    }
+})
+
+app.get('/api/verify/:token', async(req, res) => {
+    try {
+        const token = jwt.verify(req.params.token, 'secret123');
+        const email = token.email;
+        const uniqueString = token.uniqueString;
+        const type = token.type;
+        console.log(uniqueString);
+        const user = await User.findOne({
+            where: {
+                email: email
+            }
+        })
+        if (user) {
+            const stringValid = await bcrypt.compare(uniqueString, user.uniqueString);
+            if (stringValid) {
+                if(type === 0) {
+                    user.verified = true;
+                    await user.save();
+                    // res.send("Verified Successfully");
+                    return res.redirect('https://sdgs11.herokuapp.com/login');
+                }else if(type === 1) {
+                    return res.json({status: 'ok'});
+                }
+            }
+            return res.json({status: 'fail', error: "Verify Failed"});
+        }else {
+            return res.json({status: 'fail', error: "Invalid URL"});
+        }
+    } catch (err) {
+        return res.json({status: 'fail', error: err});
     }
 })
 
@@ -41,15 +133,18 @@ app.post('/api/login', async (req, res) => {
         if(!user) return res.json({status: 'error', error: 'Invalid User'})
         const passwordValid = await bcrypt.compare(req.body.password, user.password);
         if(passwordValid){
-            const token = jwt.sign({
-                userID: user.userID,
-                name: user.name,
-                email: user.email,
-                studentID: user.studentID,
-            }, 'secret123')
-            return res.json({status: 'ok', user: token})
+            if(!user.verified) return res.json({status: 'fail', error: "Verify First"})
+            else{
+                const token = jwt.sign({
+                    userID: user.userID,
+                    name: user.name,
+                    email: user.email,
+                    studentID: user.studentID,
+                }, 'secret123')
+                return res.json({status: 'ok', user: token})
+            }
         }else{
-            return res.json({status: 'fail', error: "Password Invalid"})
+            return res.json({status: 'fail', error: "Password Incorrect"})
         }
     } catch (err) {
         console.log(err);
@@ -73,6 +168,99 @@ app.get('/api/user', async (req, res) => {
     }
 })
 
+async function sendResetMail(email, uniqueString) {
+    try {
+        const accessToken = await oAuth2Client.getAccessToken()
+        const transport = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                type: 'OAUTH2',
+                user: 'nthutestsdgs@gmail.com',
+                clientId: CLIENT_ID,
+                clientSecret: CLIENT_SECRET,
+                refreshToken: REFRESH_TOKEN,
+                accessToken: accessToken
+            }
+        })
+        const token = jwt.sign(
+            {
+                email: email, 
+                uniqueString: uniqueString,
+                type: 1,
+            },
+            'secret123', 
+            {
+                expiresIn: '5m',
+            }
+        )
+        const mailOptions = {
+            from: 'NTHUSDGS <nthusdgs@gmail.com',
+            to: email,
+            subject: '[NTHU SDGS] Reset Password',
+            text: 'Go to this link: https://sdgs11.herokuapp.com/resetpassword/' + token + ' to reset your password. Thanks',
+            html: '<p>Press <a href=https://sdgs11.herokuapp.com/resetpassword/' + token + '>here</a> to reset your password. Thanks</p>\
+            <br>Link will expire in 5 minutes'
+        }
+        const result = await transport.sendMail(mailOptions);
+        return result;
+    } catch (err) {
+        return err;
+    }
+}
+
+app.post('/api/resetMail', async (req, res) => {
+    try {
+        var randString = "";
+        const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (var i = 0; i < 20; i++)
+            randString += possible.charAt(Math.floor(Math.random() * possible.length));
+        const hashString = await bcrypt.hash(randString, 10);
+        const user = await User.findOne({
+            where: {
+                email: req.body.email,
+            }
+        })
+        if (user) {
+            if(user.verified === false) return res.json({status: "fail", error: "Please Verify Email First"});
+            user.uniqueString = hashString;
+            await user.save();
+        } else {
+            return res.json({status: "fail", error: "Email Not Registered"});
+        }
+        res.json({status: "ok"});
+        await sendResetMail(req.body.email, randString);
+    } catch (err) {
+        console.log(err);
+        return res.json({status: 'fail', error: err});
+    }
+})
+
+app.post('/api/resetPassword', async(req, res) => {
+    try {
+        const token= jwt.verify(req.body.token, 'secret123');
+        console.log(token);
+        const email = token.email;
+        const user = await User.findOne({
+            where: {
+                email: email
+            }
+        })
+        var randString = "";
+        const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (var i = 0; i < 20; i++)
+            randString += possible.charAt(Math.floor(Math.random() * possible.length));
+        const hashString = await bcrypt.hash(randString, 10);
+        const hashPassword = await bcrypt.hash(req.body.password, 10);
+        user.password = hashPassword;
+        user.uniqueString = hashString;
+        await user.save();
+        // res.send("Verified Successfully");
+        return res.json({status: "ok"});
+    } catch (err) {
+        console.log(err);
+        return res.json({status: 'fail', error: "Reset Failed"});
+    }
+})
 
 // ALL
 app.get('/api/all', async (req, res) => {

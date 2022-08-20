@@ -7,5 +7,11 @@ const sequelize = new Sequelize('heroku_e10daa3e369a0d3', 'b3fa30cce1e139', '369
       timestamps: false
     }
 });
-
+// const sequelize = new Sequelize('email_database', 'root', 'rootpassword', {
+//   host: 'localhost',
+//   dialect: 'mysql',
+//   define: {
+//     timestamps: false
+//   }
+// });
 module.exports = sequelize;

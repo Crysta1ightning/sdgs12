@@ -21,6 +21,14 @@ const User = sequelize.define('users', {
     studentID: {
         type: Sequelize.INTEGER,
         unique: true,
+    },
+    verified: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+    },
+    uniqueString: {
+        type: Sequelize.STRING,
+        allowNull: false
     }
 });
 
