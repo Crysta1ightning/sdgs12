@@ -108,8 +108,7 @@ app.get('/api/verify/:token', async(req, res) => {
                 if(type === 0) {
                     user.verified = true;
                     await user.save();
-                    // res.send("Verified Successfully");
-                    return res.redirect('https://sdgs11.herokuapp.com/login');
+                    return res.json({status: 'ok'});
                 }else if(type === 1) {
                     return res.json({status: 'ok'});
                 }
