@@ -53,8 +53,8 @@ async function sendVerificationMail(email, uniqueString) {
             from: 'NTHUSDGS <nthusdgs@gmail.com',
             to: email,
             subject: '[NTHU SDGS] Verify Your Email',
-            text: 'Go to this link: https://sdgs12.herokuapp.com/api/verify/' + token + ' to verify your email. Thanks',
-            html: '<p>Press <a href=https://sdgs12.herokuapp.com/api/verify/' + token + '>here</a> to verify your email. Thanks</p>\
+            text: 'Go to this link: https://sdgs11.herokuapp.com/verifymail/' + token + ' to verify your email. Thanks',
+            html: '<p>Press <a href=https://sdgs11.herokuapp.com/verifymail/' + token + '>here</a> to verify your email. Thanks</p>\
             <br>Link will expire in 5 minutes'
         }
         const result = await transport.sendMail(mailOptions);
