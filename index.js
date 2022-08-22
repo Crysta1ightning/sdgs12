@@ -307,7 +307,7 @@ app.get('/api/pathFinish', async (req, res) => {
 })
 
 
-// PATHPAGE
+// PATH
 app.post('/api/path', async (req, res) => {
     const pathID = req.body.pathID;
     // Get spotID from spotpath
@@ -326,7 +326,7 @@ app.post('/api/path', async (req, res) => {
     }
 })
 
-app.post('/api/spot', async (req, res) => {
+app.post('/api/spotAll', async (req, res) => {
     const spotIDList = req.body.spotIDList;
     try {
         const spotData = await Spot.findAll({
@@ -377,13 +377,39 @@ app.post('/api/claim', async (req, res) => {
     }
 })
 
-app.get('/', async function (req, res) {
+// SPOT
+app.post('/api/spot', async (req, res) => {
+    const spotID = req.body.spotID;
     try {
-        const spotData = await Spot.findAll();
+        const spotData = await Spot.findOne({
+            where: {
+                spotID: spotID,
+            }
+        });
         return res.json({status: 'ok', spotData: spotData});
     } catch (err) {
         console.log(err);
-        return res.json({status: 'fail', error: "SpotData Error"});
+        return res.json({status: 'fail', error: "Cannot Get spotData"});
+    }
+})
+
+app.post('/api/spotFinished', async (req, res) => {
+    const token = req.headers["x-access-token"];
+    try {
+        const decoded = jwt.verify(token, 'secret123');
+        const userID = decoded.userID;
+        const spotID = req.body.spotID
+        const finishedData = await UserToSpot.findOne({
+            where: {
+                userID: userID,
+                spotID: spotID
+            }
+        })
+        console.log("FINSIHED" + finishedData);
+        return res.json({status: 'ok', finishedData: finishedData});
+    } catch (err) {
+        console.log(err);
+        return res.json({status: 'fail', error: "Cannot Get finishedList"})
     }
 })
 
