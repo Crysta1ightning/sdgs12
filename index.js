@@ -315,20 +315,14 @@ app.post('/api/path', async (req, res) => {
         const spotPath = await SpotToPath.findAll({
             where: {pathID: pathID}
         });
-        console.log(spotPath);
-        try {
-            const pathData = await Path.findOne({
-                where: {pathID: pathID}
-            });
-            // console.log(pathData);
-            return res.json({status: "ok", pathData: pathData, spotPath: spotPath});
-        } catch (err) {
-            console.log(err);
-            return res.json({status: "fail", error: "Invalid pathID"});
-        }
+        if(spotPath.length === 0) return res.json({status: "fail", error: "Invalid pathID"});
+        const pathData = await Path.findOne({
+            where: {pathID: pathID}
+        })
+        return res.json({status: "ok", pathData: pathData, spotPath: spotPath});
     } catch (err) {
         console.log(err);
-        return res.json({status: "fail", error: "Invalid pathID"});
+        return res.json({status: "fail", error: "Fetch Error"});
     }
 })
 
