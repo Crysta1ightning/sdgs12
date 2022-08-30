@@ -18,11 +18,11 @@ const Spot = sequelize.define('spots', {
         type: Sequelize.TEXT('long'),
         allowNull: false,
     },
-    x: {
+    lat: {
         type: Sequelize.DOUBLE,
         allowNull: false,
     },    
-    y: {
+    lng: {
         type: Sequelize.DOUBLE,
         allowNull: false,
     }
