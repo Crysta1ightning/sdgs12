@@ -19,7 +19,7 @@ app.use(express.json())
 const CLIENT_ID = '673142117765-s8rpp52r7etabta82nt4bvl3gi5g4r32.apps.googleusercontent.com'
 const CLIENT_SECRET = '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'
 const REDIRECT_URI = 'https://developers.google.com/oauthplayground'
-const REFRESH_TOKEN = '1//04FnEyvfkNup_CgYIARAAGAQSNwF-L9IrjBrVbxinsMqlwiSV4F0SzubCg8YrykzoMfJHuOqY1Q2rbQMfrADFmYVZgArGCAprHKI'
+const REFRESH_TOKEN = '1//04NCuIPQPXT_ECgYIARAAGAQSNwF-L9Ir5gajMnHmYqktuUe6Mhfs-voaPcIW5C9czY-BDl7zqwToMUamd0rqPTUB3VZbrmp3FyQ'
 
 const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 oAuth2Client.setCredentials({refresh_token: REFRESH_TOKEN})
@@ -58,9 +58,11 @@ async function sendVerificationMail(email, uniqueString) {
             <br>Link will expire in 5 minutes'
         }
         const result = await transport.sendMail(mailOptions);
-        return result
+        console.log(result);
+        return result;
     } catch (err) {
-        return err
+        console.log(err);
+        return err;
     }
 }
 
@@ -83,7 +85,6 @@ app.post('/api/register', async (req, res) => {
         if(req.body.studentID === '') res.json({status: 'ok2'});
         else res.json({status: "ok1"});
         await sendVerificationMail(req.body.newEmail, randString);
-        
     } catch (err) {
         console.log(err);
         return res.json({status: 'fail', error: 'Email Registered'});
