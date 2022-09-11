@@ -22,6 +22,9 @@ const User = sequelize.define('users', {
         type: Sequelize.INTEGER,
         unique: true,
     },
+    name: {
+        type: Sequelize.STRING(45),
+    },
     verified: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
