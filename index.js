@@ -65,6 +65,7 @@ async function sendVerificationMail(email, uniqueString) {
 app.post('/api/register', async (req, res) => {
     try {
         const studentID = req.body.studentID === '' ? null : req.body.studentID;
+        const username = req.body.username === '' ? null : req.body.username;
         var randString = "";
         const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         for (var i = 0; i < 20; i++)
@@ -75,6 +76,7 @@ app.post('/api/register', async (req, res) => {
             email: req.body.newEmail,
             password: hashPassword,
             studentID: studentID,
+            username: username,
             verified: false,
             uniqueString: hashString
         })
@@ -136,6 +138,7 @@ app.post('/api/login', async (req, res) => {
                     name: user.name,
                     email: user.email,
                     studentID: user.studentID,
+                    username: user.username,
                 }, 'secret123')
                 return res.json({status: 'ok', user: token})
             }

@@ -22,7 +22,7 @@ const User = sequelize.define('users', {
         type: Sequelize.INTEGER,
         unique: true,
     },
-    name: {
+    username: {
         type: Sequelize.STRING(45),
     },
     verified: {
