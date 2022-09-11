@@ -45,17 +45,13 @@ async function sendVerificationMail(email, uniqueString) {
                 type: 0,
             },
             'secret123', 
-            {
-                expiresIn: '5m',
-            }
         )
         const mailOptions = {
             from: 'NTHUSDGS <nthusdgs@gmail.com',
             to: email,
             subject: '[NTHU SDGS] Verify Your Email',
             text: 'Go to this link: https://sdgs11.herokuapp.com/verifymail/' + token + ' to verify your email. Thanks',
-            html: '<p>Press <a href=https://sdgs11.herokuapp.com/verifymail/' + token + '>here</a> to verify your email. Thanks</p>\
-            <br>Link will expire in 5 minutes'
+            html: '<p>Press <a href=https://sdgs11.herokuapp.com/verifymail/' + token + '>here</a> to verify your email. Thanks</p>'
         }
         const result = await transport.sendMail(mailOptions);
         console.log(result);
@@ -189,17 +185,13 @@ async function sendResetMail(email, uniqueString) {
                 type: 1,
             },
             'secret123', 
-            {
-                expiresIn: '5m',
-            }
         )
         const mailOptions = {
             from: 'NTHUSDGS <nthusdgs@gmail.com',
             to: email,
             subject: '[NTHU SDGS] Reset Password',
             text: 'Go to this link: https://sdgs11.herokuapp.com/resetpassword/' + token + ' to reset your password. Thanks',
-            html: '<p>Press <a href=https://sdgs11.herokuapp.com/resetpassword/' + token + '>here</a> to reset your password. Thanks</p>\
-            <br>Link will expire in 5 minutes'
+            html: '<p>Press <a href=https://sdgs11.herokuapp.com/resetpassword/' + token + '>here</a> to reset your password. Thanks</p>'
         }
         const result = await transport.sendMail(mailOptions);
         return result;
