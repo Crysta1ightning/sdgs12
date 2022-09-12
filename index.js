@@ -77,6 +77,8 @@ app.post('/api/register', async (req, res) => {
             password: hashPassword,
             studentID: studentID,
             username: username,
+            bgimg: 0,
+            userimg: 0,
             verified: false,
             uniqueString: hashString
         })
@@ -139,6 +141,8 @@ app.post('/api/login', async (req, res) => {
                     email: user.email,
                     studentID: user.studentID,
                     username: user.username,
+                    bgimg: user.bgimg,
+                    userimg: user.userimg,
                 }, 'secret123')
                 return res.json({status: 'ok', user: token})
             }

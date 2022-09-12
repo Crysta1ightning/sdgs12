@@ -1,3 +1,4 @@
+const { INTEGER } = require('sequelize');
 const Sequelize = require('sequelize');
 const sequelize = require('./sequelize');
 
@@ -24,6 +25,12 @@ const User = sequelize.define('users', {
     },
     username: {
         type: Sequelize.STRING(45),
+    },
+    bgimg: {
+        type: Sequelize.INTEGER,
+    },
+    userimg: {
+        type: Sequelize.INTEGER,
     },
     verified: {
         type: Sequelize.BOOLEAN,
