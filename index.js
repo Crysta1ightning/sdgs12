@@ -413,6 +413,29 @@ app.post('/api/spotFinished', async (req, res) => {
     }
 })
 
+// PROFILE
+app.post('/api/chooseImg', async(req, res) => {
+    try {
+        const _user = req.body.user;
+        const type = req.body.type; // 0 for bgimg 1 for userimg
+        // console.log(_user);
+        console.log(type);
+        const email = _user.email;
+        const user = await User.findOne({
+            where: {
+                email: email
+            }
+        })
+        if(type === 0) user.bgimg = req.body.BIchoice;
+        else if(type === 1) user.userimg = req.body.UIchoice;
+        await user.save();
+        return res.json({status: "ok"});
+    } catch (err) {
+        console.log(err);
+        return res.json({status: 'fail', error: "Reset Failed"});
+    }
+})
+
 const port = process.env.PORT || 3001
 
 app.listen(port, () => {
